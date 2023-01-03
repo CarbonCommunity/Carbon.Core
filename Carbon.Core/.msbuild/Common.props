@@ -17,9 +17,10 @@
 	</PropertyGroup>
 
 	<PropertyGroup>
+		<AssemblyName>$(Product)</AssemblyName>
 		<AssemblyVersion>$(Version)</AssemblyVersion>
 		<FileVersion>$(VersionPrefix)</FileVersion>
-		<Version>1.$([System.DateTime]::UtcNow.ToString('yy.ddMM')).10</Version>
+		<Version>1.$([System.DateTime]::UtcNow.ToString('yy.MMdd')).$([System.DateTime]::UtcNow.ToString('HHmm'))</Version>
 		<VersionPrefix>$([System.DateTime]::UtcNow.ToString("yyyy.MM.dd.HHmm"))</VersionPrefix>
 		<VersionSuffix>$(Configuration)</VersionSuffix>
 

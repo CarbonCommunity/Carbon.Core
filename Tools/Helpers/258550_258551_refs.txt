@@ -1,6 +1,6 @@
 regex:0Harmony.dll
-regex:Assembly-CSharp.dll
 regex:Assembly-CSharp-firstpass.dll
+regex:Assembly-CSharp.dll
 regex:Facepunch.Console.dll
 regex:Facepunch.Network.dll
 regex:Facepunch.Rcon.dll
@@ -22,6 +22,7 @@ regex:UnityEngine.dll
 regex:UnityEngine.ImageConversionModule.dll
 regex:UnityEngine.PhysicsModule.dll
 regex:UnityEngine.SharedInternalsModule.dll
+regex:UnityEngine.TerrainModule.dll
 regex:UnityEngine.TextRenderingModule.dll
 regex:UnityEngine.UI.dll
 regex:UnityEngine.UnityWebRequestAssetBundleModule.dll

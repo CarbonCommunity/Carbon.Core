@@ -1,14 +1,16 @@
-﻿///
-/// Copyright (c) 2022 Carbon Community 
-/// All rights reserved
-/// 
-
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Reflection;
 using Newtonsoft.Json;
 using Oxide.Core;
+
+/*
+ *
+ * Copyright (c) 2022-2023 Carbon Community 
+ * All rights reserved.
+ *
+ */
 
 namespace Carbon.Base;
 

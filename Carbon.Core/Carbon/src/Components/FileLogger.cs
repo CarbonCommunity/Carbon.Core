@@ -1,9 +1,16 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using Carbon.Core;
 using Carbon.Extensions;
 using Facepunch;
+
+/*
+ *
+ * Copyright (c) 2022-2023 Carbon Community 
+ * All rights reserved.
+ *
+ */
 
 namespace Carbon;
 

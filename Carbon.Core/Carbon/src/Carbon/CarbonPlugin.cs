@@ -1,14 +1,15 @@
-﻿///
-/// Copyright (c) 2022 Carbon Community 
-/// All rights reserved
-/// 
+﻿using Oxide.Plugins;
 
-using Oxide.Plugins;
+/*
+ *
+ * Copyright (c) 2022-2023 Carbon Community 
+ * All rights reserved.
+ *
+ */
 
-namespace Carbon.Plugins
+namespace Carbon.Plugins;
+
+public class CarbonPlugin : RustPlugin
 {
-	public class CarbonPlugin : RustPlugin
-	{
 
-	}
 }

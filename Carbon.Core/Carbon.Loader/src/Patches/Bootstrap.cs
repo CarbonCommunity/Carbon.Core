@@ -1,35 +1,23 @@
-﻿///
-/// Copyright (c) 2022 Carbon Community 
-/// All rights reserved
-/// 
-using System.Diagnostics;
+﻿using System.Diagnostics;
+using Carbon.LoaderEx.Harmony;
 using Carbon.LoaderEx.Utility;
-using Harmony;
+using HarmonyLib;
+
+/*
+ *
+ * Copyright (c) 2022-2023 Carbon Community 
+ * All rights reserved.
+ *
+ */
 
 namespace Carbon.LoaderEx.Patches;
 
 internal static class __Bootstrap
 {
+#if USE_DEBUGGER
 	[HarmonyPatch(typeof(Bootstrap), methodName: "Init_Tier0")]
 	internal static class __Init_Tier0
 	{
-		public static void Prefix()
-		{
-			bool r1 = Hijacker.DoUnload();
-			bool r2 = Hijacker.DoMove();
-
-			if (r1 || r2)
-			{
-				Logger.Warn("Application will now exit");
-				Process.GetCurrentProcess().Kill();
-			}
-			else
-			{
-				Hijacker.DoHijack();
-			}
-		}
-
-#if USE_DEBUGGER
 		public static void Postfix()
 		{
 			Logger.Warn("Waiting for a debugger connection..");
@@ -43,13 +31,13 @@ internal static class __Bootstrap
 			t.Wait();
 			Debugger.Break();
 		}
-#endif
 	}
+#endif
 
 	[HarmonyPatch(typeof(Bootstrap), methodName: "StartupShared")]
 	internal static class __StartupShared
 	{
 		public static void Prefix()
-			=> Components.HarmonyLoader.GetInstance().Load("Carbon.dll");
+			=> HarmonyLoaderEx.GetInstance().Load("Carbon.dll");
 	}
 }

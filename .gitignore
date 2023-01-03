@@ -1,23 +1,6 @@
-# Project specific
-[Rr]ust/
-[Rr]elease/
-
-# msbuild cached stuff
-.gitag
-.rndasm
-
-# Local HarmonyLib version
-**/[Cc]arbon/[Rr]esources/1Harmony.dll
-
 # Build results
 [Bb]in/
 [Oo]bj/
-
-# Fody - auto-generated XML schema
-FodyWeavers.xsd
-
-# User specific project options
-*.csproj.user
 
 # Visual Studio 2015/2017 cache/options directory
 .vs/
@@ -29,3 +12,24 @@ FodyWeavers.xsd
 !.vscode/launch.json
 !.vscode/extensions.json
 *.code-workspace
+*.csproj.user
+
+# Fody - auto-generated XML schema
+FodyWeavers.xsd
+
+# Local HarmonyLib version
+**/Carbon/Resources/1Harmony.dll
+
+# Oxide autogen hooks
+**/Carbon.Hooks.Extended/src
+
+# Project release folder
+[Rr]elease/
+
+# Rust managed files
+[Rr]ust/
+
+# msbuild stuff
+.tmp
+.gitag
+.rndasm

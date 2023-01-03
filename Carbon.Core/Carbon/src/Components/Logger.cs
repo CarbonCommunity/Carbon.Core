@@ -1,12 +1,14 @@
-﻿///
-/// Copyright (c) 2022 Carbon Community 
-/// All rights reserved
-/// 
-
-using System;
+﻿using System;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using Facepunch;
+
+/*
+ *
+ * Copyright (c) 2022-2023 Carbon Community 
+ * All rights reserved.
+ *
+ */
 
 namespace Carbon;
 
@@ -159,7 +161,7 @@ public class Logger
 		Write(Logger.Severity.Error, message, ex);
 	}
 #else
-	public static void Error(object message, Exception ex = null)
-		=> Write(Logger.Severity.Error, message, ex);
+        public static void Error(object message, Exception ex = null)
+            => Write(Logger.Severity.Error, message, ex);
 #endif
 }

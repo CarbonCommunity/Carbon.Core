@@ -1,224 +1,225 @@
-﻿///
-/// Copyright (c) 2022 Carbon Community 
-/// All rights reserved
-/// 
-
-using System;
+﻿using System;
 using System.Collections.Generic;
 using Facepunch;
 using static Oxide.Plugins.RustPlugin;
 
-namespace Oxide.Plugins
+/*
+ *
+ * Copyright (c) 2022-2023 Carbon Community 
+ * All rights reserved.
+ *
+ */
+
+namespace Oxide.Plugins;
+
+public class Timers
 {
-	public class Timers
+	public RustPlugin Plugin { get; }
+	internal List<Timer> _timers { get; set; } = new List<Timer>();
+
+	public Timers() { }
+	public Timers(RustPlugin plugin)
 	{
-		public RustPlugin Plugin { get; }
-		internal List<Timer> _timers { get; set; } = new List<Timer>();
+		Plugin = plugin;
+	}
 
-		public Timers() { }
-		public Timers(RustPlugin plugin)
+	public bool IsValid()
+	{
+		return Plugin != null && Plugin.persistence != null;
+	}
+	public void Clear()
+	{
+		foreach (var timer in _timers)
 		{
-			Plugin = plugin;
+			timer.Destroy();
 		}
 
-		public bool IsValid()
+		_timers.Clear();
+		_timers = null;
+	}
+
+	public Persistence Persistence => Plugin.persistence;
+
+	public Timer In(float time, Action action)
+	{
+		if (!IsValid()) return null;
+
+		var timer = new Timer(Persistence, action, Plugin);
+		var activity = new Action(() =>
 		{
-			return Plugin != null && Plugin.persistence != null;
-		}
-		public void Clear()
-		{
-			foreach (var timer in _timers)
+			try
 			{
-				timer.Destroy();
+				action?.Invoke();
+				timer.TimesTriggered++;
 			}
+			catch (Exception ex) { Plugin.LogError($"Timer {time}s has failed:", ex); }
 
-			_timers.Clear();
-			_timers = null;
-		}
+			timer.Destroy();
+			Pool.Free(ref timer);
+		});
 
-		public Persistence Persistence => Plugin.persistence;
+		timer.Callback = activity;
+		Persistence.Invoke(activity, time);
+		return timer;
+	}
+	public Timer Once(float time, Action action)
+	{
+		return In(time, action);
+	}
+	public Timer Every(float time, Action action)
+	{
+		if (!IsValid()) return null;
 
-		public Timer In(float time, Action action)
+		var timer = new Timer(Persistence, action, Plugin);
+		var activity = new Action(() =>
 		{
-			if (!IsValid()) return null;
-
-			var timer = new Timer(Persistence, action, Plugin);
-			var activity = new Action(() =>
+			try
 			{
-				try
-				{
-					action?.Invoke();
-					timer.TimesTriggered++;
-				}
-				catch (Exception ex) { Plugin.LogError($"Timer {time}s has failed:", ex); }
+				action?.Invoke();
+				timer.TimesTriggered++;
+			}
+			catch (Exception ex)
+			{
+				Plugin.LogError($"Timer {time}s has failed:", ex);
 
 				timer.Destroy();
 				Pool.Free(ref timer);
-			});
+			}
+		});
 
-			timer.Callback = activity;
-			Persistence.Invoke(activity, time);
-			return timer;
-		}
-		public Timer Once(float time, Action action)
-		{
-			return In(time, action);
-		}
-		public Timer Every(float time, Action action)
-		{
-			if (!IsValid()) return null;
+		timer.Callback = activity;
+		Persistence.InvokeRepeating(activity, time, time);
+		return timer;
+	}
+	public Timer Repeat(float time, int times, Action action)
+	{
+		if (!IsValid()) return null;
 
-			var timer = new Timer(Persistence, action, Plugin);
-			var activity = new Action(() =>
+		var timer = new Timer(Persistence, action, Plugin);
+		var activity = new Action(() =>
+		{
+			try
 			{
-				try
-				{
-					action?.Invoke();
-					timer.TimesTriggered++;
-				}
-				catch (Exception ex)
-				{
-					Plugin.LogError($"Timer {time}s has failed:", ex);
+				action?.Invoke();
+				timer.TimesTriggered++;
 
-					timer.Destroy();
+				if (timer.TimesTriggered >= times)
+				{
+					timer.Dispose();
 					Pool.Free(ref timer);
 				}
-			});
-
-			timer.Callback = activity;
-			Persistence.InvokeRepeating(activity, time, time);
-			return timer;
-		}
-		public Timer Repeat(float time, int times, Action action)
-		{
-			if (!IsValid()) return null;
-
-			var timer = new Timer(Persistence, action, Plugin);
-			var activity = new Action(() =>
+			}
+			catch (Exception ex)
 			{
-				try
-				{
-					action?.Invoke();
-					timer.TimesTriggered++;
+				Plugin.LogError($"Timer {time}s has failed:", ex);
 
-					if (timer.TimesTriggered >= times)
-					{
-						timer.Dispose();
-						Pool.Free(ref timer);
-					}
-				}
-				catch (Exception ex)
-				{
-					Plugin.LogError($"Timer {time}s has failed:", ex);
+				timer.Destroy();
+				Pool.Free(ref timer);
+			}
+		});
 
-					timer.Destroy();
-					Pool.Free(ref timer);
-				}
-			});
+		timer.Callback = activity;
+		Persistence.InvokeRepeating(activity, time, time);
+		return timer;
+	}
+}
 
-			timer.Callback = activity;
-			Persistence.InvokeRepeating(activity, time, time);
-			return timer;
-		}
+public class Timer : IDisposable
+{
+	public RustPlugin Plugin { get; set; }
+
+	public Action Activity { get; set; }
+	public Action Callback { get; set; }
+	public Persistence Persistence { get; set; }
+	public int Repetitions { get; set; }
+	public int TimesTriggered { get; set; }
+	public bool Destroyed { get; set; }
+
+	public Timer() { }
+	public Timer(Persistence persistence, Action activity, RustPlugin plugin = null)
+	{
+		Persistence = persistence;
+		Activity = activity;
+		Plugin = plugin;
 	}
 
-	public class Timer : IDisposable
+	public void Reset(float delay = -1f, int repetitions = 1)
 	{
-		public RustPlugin Plugin { get; set; }
+		Repetitions = repetitions;
 
-		public Action Activity { get; set; }
-		public Action Callback { get; set; }
-		public Persistence Persistence { get; set; }
-		public int Repetitions { get; set; }
-		public int TimesTriggered { get; set; }
-		public bool Destroyed { get; set; }
-
-		public Timer() { }
-		public Timer(Persistence persistence, Action activity, RustPlugin plugin = null)
+		if (Destroyed)
 		{
-			Persistence = persistence;
-			Activity = activity;
-			Plugin = plugin;
+			Carbon.Logger.Warn($"You cannot restart a timer that has been destroyed.");
+			return;
 		}
 
-		public void Reset(float delay = -1f, int repetitions = 1)
+		if (Persistence != null)
 		{
-			Repetitions = repetitions;
+			Persistence.CancelInvoke(Callback);
+			Persistence.CancelInvokeFixedTime(Callback);
+		}
 
-			if (Destroyed)
+		TimesTriggered = 0;
+
+		if (Repetitions == 1)
+		{
+			Callback = new Action(() =>
 			{
-				Carbon.Logger.Warn($"You cannot restart a timer that has been destroyed.");
-				return;
-			}
-
-			if (Persistence != null)
-			{
-				Persistence.CancelInvoke(Callback);
-				Persistence.CancelInvokeFixedTime(Callback);
-			}
-
-			TimesTriggered = 0;
-
-			if (Repetitions == 1)
-			{
-				Callback = new Action(() =>
+				try
 				{
-					try
+					Activity?.Invoke();
+					TimesTriggered++;
+				}
+				catch (Exception ex) { Plugin.LogError($"Timer {delay}s has failed:", ex); }
+
+				Destroy();
+			});
+
+			Persistence.Invoke(Callback, delay);
+		}
+		else
+		{
+			Callback = new Action(() =>
+			{
+				try
+				{
+					Activity?.Invoke();
+					TimesTriggered++;
+
+					if (TimesTriggered >= Repetitions)
 					{
-						Activity?.Invoke();
-						TimesTriggered++;
+						Dispose();
 					}
-					catch (Exception ex) { Plugin.LogError($"Timer {delay}s has failed:", ex); }
+				}
+				catch (Exception ex)
+				{
+					Plugin.LogError($"Timer {delay}s has failed:", ex);
 
 					Destroy();
-				});
+				}
+			});
 
-				Persistence.Invoke(Callback, delay);
-			}
-			else
-			{
-				Callback = new Action(() =>
-				{
-					try
-					{
-						Activity?.Invoke();
-						TimesTriggered++;
-
-						if (TimesTriggered >= Repetitions)
-						{
-							Dispose();
-						}
-					}
-					catch (Exception ex)
-					{
-						Plugin.LogError($"Timer {delay}s has failed:", ex);
-
-						Destroy();
-					}
-				});
-
-				Persistence.InvokeRepeating(Callback, delay, delay);
-			}
+			Persistence.InvokeRepeating(Callback, delay, delay);
 		}
-		public void Destroy()
+	}
+	public void Destroy()
+	{
+		if (Destroyed) return;
+		Destroyed = true;
+
+		if (Persistence != null)
 		{
-			if (Destroyed) return;
-			Destroyed = true;
-
-			if (Persistence != null)
-			{
-				Persistence.CancelInvoke(Callback);
-				Persistence.CancelInvokeFixedTime(Callback);
-			}
-
-			if (Callback != null)
-			{
-				Callback = null;
-			}
+			Persistence.CancelInvoke(Callback);
+			Persistence.CancelInvokeFixedTime(Callback);
 		}
-		public void Dispose()
+
+		if (Callback != null)
 		{
-			Destroy();
+			Callback = null;
 		}
+	}
+	public void Dispose()
+	{
+		Destroy();
 	}
 }

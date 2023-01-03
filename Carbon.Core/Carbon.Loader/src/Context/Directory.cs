@@ -1,14 +1,17 @@
-﻿
-///
-/// Copyright (c) 2022 Carbon Community 
-/// All rights reserved
-/// 
-using System;
+﻿using System;
 using System.IO;
+using Carbon.LoaderEx.Utility;
+
+/*
+ *
+ * Copyright (c) 2022-2023 Carbon Community 
+ * All rights reserved.
+ *
+ */
 
 namespace Carbon.LoaderEx.Context;
 
-internal sealed class Directory
+internal sealed class Directories
 {
 	private static readonly string[]
 		Needles = { ".", "..", "../.." };
@@ -16,9 +19,9 @@ internal sealed class Directory
 	internal static readonly string
 		Game, GameManaged, GameHarmony,
 
-		Carbon, CarbonManaged, CarbonHarmony, CarbonLib, CarbonLogs;
+		Carbon, CarbonManaged, CarbonHarmony, CarbonLib, CarbonHooks, CarbonModules, CarbonLogs;
 
-	static Directory()
+	static Directories()
 	{
 		Game = null;
 		foreach (string Needle in Needles)
@@ -31,15 +34,40 @@ internal sealed class Directory
 			break;
 		}
 
-		if (Game == null) throw new System.Exception("Unable to find root folder");
+		try
+		{
+			if (Game == null) throw new System.Exception("Unable to find root folder");
 
-		GameManaged = Path.GetFullPath(Path.Combine(Game, "RustDedicated_Data", "Managed"));
-		GameHarmony = Path.GetFullPath(Path.Combine(Game, "HarmonyMods"));
+			GameManaged = Path.GetFullPath(Path.Combine(Game, "RustDedicated_Data", "Managed"));
+			GameHarmony = Path.GetFullPath(Path.Combine(Game, "HarmonyMods"));
 
-		Carbon = Path.GetFullPath(Path.Combine(Game, "carbon"));
-		CarbonLogs = Path.GetFullPath(Path.Combine(Carbon, "logs"));
-		CarbonHarmony = Path.GetFullPath(Path.Combine(Carbon, "harmony"));
-		CarbonManaged = Path.GetFullPath(Path.Combine(Carbon, "managed"));
-		CarbonLib = Path.GetFullPath(Path.Combine(CarbonManaged, "lib"));
+			Carbon = Path.GetFullPath(Path.Combine(Game, "carbon"));
+			UnityEngine.Assertions.Assert.IsTrue(Directory.Exists(Carbon), "Carbon folder is missing");
+
+			CarbonLogs = Path.Combine(Carbon, "logs");
+			if (!Directory.Exists(CarbonLogs)) Directory.CreateDirectory(CarbonLogs);
+
+			CarbonHarmony = Path.Combine(Carbon, "harmony");
+			if (!Directory.Exists(CarbonHarmony)) Directory.CreateDirectory(CarbonHarmony);
+
+			CarbonManaged = Path.Combine(Carbon, "managed");
+			if (!Directory.Exists(CarbonManaged)) Directory.CreateDirectory(CarbonManaged);
+
+			CarbonLib = Path.Combine(CarbonManaged, "lib");
+			if (!Directory.Exists(CarbonLib)) Directory.CreateDirectory(CarbonLib);
+
+			CarbonHooks = Path.Combine(CarbonManaged, "hooks");
+			if (!Directory.Exists(CarbonHooks)) Directory.CreateDirectory(CarbonModules);
+
+			CarbonModules = Path.Combine(CarbonManaged, "modules");
+			if (!Directory.Exists(CarbonModules)) Directory.CreateDirectory(CarbonModules);
+		}
+		catch (System.Exception e)
+		{
+			Logger.Error("Critical error while loading Carbon", e);
+			Rust.Application.Quit();
+			throw;
+		}
+
 	}
 }

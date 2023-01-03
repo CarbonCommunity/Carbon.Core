@@ -1,20 +1,21 @@
-﻿///
-/// Copyright (c) 2022 Carbon Community 
-/// All rights reserved
-/// 
-
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
 using Carbon;
 using Carbon.Base;
 using Carbon.Core;
-
 using Carbon.Processors;
 using Facepunch;
 using Newtonsoft.Json;
 using Oxide.Core;
+
+/*
+ *
+ * Copyright (c) 2022-2023 Carbon Community 
+ * All rights reserved.
+ *
+ */
 
 namespace Oxide.Plugins
 {
@@ -68,9 +69,7 @@ namespace Oxide.Plugins
 		internal void _unprocessHooks()
 		{
 			foreach (var hook in Hooks)
-			{
-				Community.Runtime.HookProcessor.UnappendHook(hook);
-			}
+				Community.Runtime.HookProcessorEx.Unsubscribe(hook, Name);
 			Carbon.Logger.Debug(Name, $"Unprocessed hooks");
 		}
 
@@ -100,10 +99,7 @@ namespace Oxide.Plugins
 			using (TimeMeasure.New($"Processing Hooks on '{this}'"))
 			{
 				foreach (var hook in Hooks)
-				{
-					Community.Runtime.HookProcessor.InstallHooks(hook);
-					Community.Runtime.HookProcessor.AppendHook(hook);
-				}
+					Community.Runtime.HookProcessorEx.Subscribe(hook, FileName);
 			}
 			Carbon.Logger.Debug(Name, "Processed hooks");
 
@@ -245,43 +241,43 @@ namespace Oxide.Plugins
 
 		public T Call<T>(string hook)
 		{
-			return (T)HookCaller.CallHook(this, hook);
+			return HookCaller.CallHook<T>(this, hook);
 		}
 		public T Call<T>(string hook, object arg1)
 		{
-			return (T)HookCaller.CallHook(this, hook, arg1);
+			return HookCaller.CallHook<T>(this, hook, arg1);
 		}
 		public T Call<T>(string hook, object arg1, object arg2)
 		{
-			return (T)HookCaller.CallHook(this, hook, arg1, arg2);
+			return HookCaller.CallHook<T>(this, hook, arg1, arg2);
 		}
 		public T Call<T>(string hook, object arg1, object arg2, object arg3)
 		{
-			return (T)HookCaller.CallHook(this, hook, arg1, arg2, arg3);
+			return HookCaller.CallHook<T>(this, hook, arg1, arg2, arg3);
 		}
 		public T Call<T>(string hook, object arg1, object arg2, object arg3, object arg4)
 		{
-			return (T)HookCaller.CallHook(this, hook, arg1, arg2, arg3, arg4);
+			return HookCaller.CallHook<T>(this, hook, arg1, arg2, arg3, arg4);
 		}
 		public T Call<T>(string hook, object arg1, object arg2, object arg3, object arg4, object arg5)
 		{
-			return (T)HookCaller.CallHook(this, hook, arg1, arg2, arg3, arg4, arg5);
+			return HookCaller.CallHook<T>(this, hook, arg1, arg2, arg3, arg4, arg5);
 		}
 		public T Call<T>(string hook, object arg1, object arg2, object arg3, object arg4, object arg5, object arg6)
 		{
-			return (T)HookCaller.CallHook(this, hook, arg1, arg2, arg3, arg4, arg5, arg6);
+			return HookCaller.CallHook<T>(this, hook, arg1, arg2, arg3, arg4, arg5, arg6);
 		}
 		public T Call<T>(string hook, object arg1, object arg2, object arg3, object arg4, object arg5, object arg6, object arg7)
 		{
-			return (T)HookCaller.CallHook(this, hook, arg1, arg2, arg3, arg4, arg5, arg6, arg7);
+			return HookCaller.CallHook<T>(this, hook, arg1, arg2, arg3, arg4, arg5, arg6, arg7);
 		}
 		public T Call<T>(string hook, object arg1, object arg2, object arg3, object arg4, object arg5, object arg6, object arg7, object arg8)
 		{
-			return (T)HookCaller.CallHook(this, hook, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8);
+			return HookCaller.CallHook<T>(this, hook, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8);
 		}
 		public T Call<T>(string hook, object arg1, object arg2, object arg3, object arg4, object arg5, object arg6, object arg7, object arg8, object arg9)
 		{
-			return (T)HookCaller.CallHook(this, hook, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9);
+			return HookCaller.CallHook<T>(this, hook, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9);
 		}
 
 		public object Call(string hook)
@@ -327,43 +323,43 @@ namespace Oxide.Plugins
 
 		public T CallHook<T>(string hook)
 		{
-			return (T)HookCaller.CallHook(this, hook);
+			return HookCaller.CallHook<T>(this, hook);
 		}
 		public T CallHook<T>(string hook, object arg1)
 		{
-			return (T)HookCaller.CallHook(this, hook, arg1);
+			return HookCaller.CallHook<T>(this, hook, arg1);
 		}
 		public T CallHook<T>(string hook, object arg1, object arg2)
 		{
-			return (T)HookCaller.CallHook(this, hook, arg1, arg2);
+			return HookCaller.CallHook<T>(this, hook, arg1, arg2);
 		}
 		public T CallHook<T>(string hook, object arg1, object arg2, object arg3)
 		{
-			return (T)HookCaller.CallHook(this, hook, arg1, arg2, arg3);
+			return HookCaller.CallHook<T>(this, hook, arg1, arg2, arg3);
 		}
 		public T CallHook<T>(string hook, object arg1, object arg2, object arg3, object arg4)
 		{
-			return (T)HookCaller.CallHook(this, hook, arg1, arg2, arg3, arg4);
+			return HookCaller.CallHook<T>(this, hook, arg1, arg2, arg3, arg4);
 		}
 		public T CallHook<T>(string hook, object arg1, object arg2, object arg3, object arg4, object arg5)
 		{
-			return (T)HookCaller.CallHook(this, hook, arg1, arg2, arg3, arg4, arg5);
+			return HookCaller.CallHook<T>(this, hook, arg1, arg2, arg3, arg4, arg5);
 		}
 		public T CallHook<T>(string hook, object arg1, object arg2, object arg3, object arg4, object arg5, object arg6)
 		{
-			return (T)HookCaller.CallHook(this, hook, arg1, arg2, arg3, arg4, arg5, arg6);
+			return HookCaller.CallHook<T>(this, hook, arg1, arg2, arg3, arg4, arg5, arg6);
 		}
 		public T CallHook<T>(string hook, object arg1, object arg2, object arg3, object arg4, object arg5, object arg6, object arg7)
 		{
-			return (T)HookCaller.CallHook(this, hook, arg1, arg2, arg3, arg4, arg5, arg6, arg7);
+			return HookCaller.CallHook<T>(this, hook, arg1, arg2, arg3, arg4, arg5, arg6, arg7);
 		}
 		public T CallHook<T>(string hook, object arg1, object arg2, object arg3, object arg4, object arg5, object arg6, object arg7, object arg8)
 		{
-			return (T)HookCaller.CallHook(this, hook, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8);
+			return HookCaller.CallHook<T>(this, hook, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8);
 		}
 		public T CallHook<T>(string hook, object arg1, object arg2, object arg3, object arg4, object arg5, object arg6, object arg7, object arg8, object arg9)
 		{
-			return (T)HookCaller.CallHook(this, hook, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9);
+			return HookCaller.CallHook<T>(this, hook, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9);
 		}
 
 		public object CallHook(string hook)

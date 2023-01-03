@@ -1,12 +1,13 @@
-﻿///
-/// Copyright (c) 2022 Carbon Community 
-/// All rights reserved
-/// 
+﻿/*
+ *
+ * Copyright (c) 2022-2023 Carbon Community 
+ * All rights reserved.
+ *
+ */
 
-namespace Carbon.Base.Interfaces
+namespace Carbon.Base.Interfaces;
+
+public interface IModuleConfig
 {
-	public interface IModuleConfig
-	{
-		bool Enabled { get; set; }
-	}
+	bool Enabled { get; set; }
 }

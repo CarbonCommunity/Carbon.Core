@@ -1,15 +1,17 @@
-﻿///
-/// Copyright (c) 2022 Carbon Community 
-/// All rights reserved
-/// 
-
-using System;
+﻿using System;
 using System.Linq;
 using System.Reflection;
 using Carbon.Extensions;
 using Oxide.Core;
 using UnityEngine;
 using static ServerUsers;
+
+/*
+ *
+ * Copyright (c) 2022-2023 Carbon Community 
+ * All rights reserved.
+ *
+ */
 
 [AttributeUsage(AttributeTargets.Class)]
 public class InfoAttribute : Attribute

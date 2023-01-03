@@ -1,9 +1,11 @@
-﻿///
-/// Copyright (c) 2022 Carbon Community 
-/// All rights reserved
-/// 
+﻿using Oxide.Core.Libraries.Covalence;
 
-using Oxide.Core.Libraries.Covalence;
+/*
+ *
+ * Copyright (c) 2022-2023 Carbon Community 
+ * All rights reserved.
+ *
+ */
 
 public static class CovalenceEx
 {

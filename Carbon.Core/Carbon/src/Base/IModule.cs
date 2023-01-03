@@ -1,26 +1,27 @@
-﻿///
-/// Copyright (c) 2022 Carbon Community 
-/// All rights reserved
-/// 
+﻿using System;
 
-using System;
+/*
+ *
+ * Copyright (c) 2022-2023 Carbon Community 
+ * All rights reserved.
+ *
+ */
 
-namespace Carbon.Base.Interfaces
+namespace Carbon.Base.Interfaces;
+
+public interface IModule : IHookableModule, IDisposable
 {
-	public interface IModule : IHookableModule, IDisposable
-	{
-		string Name { get; }
+	string Name { get; }
 
-		void Init();
-		void InitEnd();
-		void Save();
-		void Load();
+	void Init();
+	void InitEnd();
+	void Save();
+	void Load();
 
-		void SetEnabled(bool enabled);
-		bool GetEnabled();
-		void OnEnableStatus();
+	void SetEnabled(bool enabled);
+	bool GetEnabled();
+	void OnEnableStatus();
 
-		void OnEnabled(bool initialized);
-		void OnDisabled(bool initialized);
-	}
+	void OnEnabled(bool initialized);
+	void OnDisabled(bool initialized);
 }

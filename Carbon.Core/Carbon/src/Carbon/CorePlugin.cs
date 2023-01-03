@@ -1,21 +1,23 @@
-﻿///
-/// Copyright (c) 2022 Carbon Community 
-/// All rights reserved
-/// 
-
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using Carbon.Base;
 using Carbon.Base.Interfaces;
 using Carbon.Components;
 using Carbon.Extensions;
-using Carbon.Modules;
+using Carbon.Hooks;
 using Facepunch;
 using Newtonsoft.Json;
 using Oxide.Plugins;
 using UnityEngine;
+
+/*
+ *
+ * Copyright (c) 2022-2023 Carbon Community 
+ * All rights reserved.
+ *
+ */
 
 namespace Carbon.Core;
 
@@ -55,7 +57,6 @@ public class CorePlugin : RustPlugin
 		timer.Every(5f, () =>
 		{
 			if (!Logger._file._hasInit || Logger._file._buffer.Count == 0 || Community.Runtime.Config.LogFileMode != 1) return;
-
 			Logger._file._flush();
 		});
 	}
@@ -96,13 +97,13 @@ public class CorePlugin : RustPlugin
 	[ConsoleCommand("exit", "Completely unloads Carbon from the game, rendering it fully vanilla.")]
 	private void Exit(ConsoleSystem.Arg arg)
 	{
-		Carbon.LoaderEx.Components.Supervisor.Core.Exit();
+		Supervisor.ASM.UnloadModule("Carbon.dll", false);
 	}
 
 	[ConsoleCommand("reboot", "Unloads Carbon from the game and then loads it back again with the latest version changes (if any).")]
 	private void Reboot(ConsoleSystem.Arg arg)
 	{
-		Carbon.LoaderEx.Components.Supervisor.Core.Reboot();
+		Supervisor.ASM.UnloadModule("Carbon.dll", true);
 	}
 
 	[ConsoleCommand("version", "Returns currently loaded version of Carbon.")]
@@ -192,42 +193,172 @@ public class CorePlugin : RustPlugin
 		}
 	}
 
+#if DEBUG
+	[ConsoleCommand("assembly", "Debug stuff.")]
+	private void AssemblyInfo(ConsoleSystem.Arg arg)
+	{
+		if (!arg.IsPlayerCalledAndAdmin()) return;
+
+		int count = 0;
+		StringTable body = new StringTable("#", "Assembly", "Version", "Dynamic", "Location");
+		foreach (Assembly assembly in AppDomain.CurrentDomain.GetAssemblies())
+			body.AddRow($"{count++:n0}", assembly.GetName().Name, assembly.GetName().Version, assembly.IsDynamic, (assembly.IsDynamic) ? string.Empty : assembly.Location);
+		Reply(body.ToStringMinimal(), arg);
+	}
+#endif
+
 	[ConsoleCommand("hooks", "Prints the list of all hooks that have been called at least once.")]
 	private void HookInfo(ConsoleSystem.Arg arg)
 	{
 		if (!arg.IsPlayerCalledAndAdmin()) return;
 
-		StringTable body = new StringTable("#", "Hook", "Success", "Current Time", "Total Time", "Plugins Using");
-		string mode = arg.HasArgs(1) ? arg.Args[0] : null;
-		int count = 0, success = 0;
-		bool onlyFailed = false;
+		StringTable body = new StringTable("#", "Hook", "Identifier", "Type", "Status", "Current", "Total", "Subscribers");
+		int count = 0, success = 0, warning = 0, failure = 0;
 
-		switch (mode)
+		string option1 = arg.GetString(0, null);
+		string option2 = arg.GetString(1, null);
+
+		switch (option1)
 		{
-			case "--failed":
-				onlyFailed = true;
+			case "enable":
+				Community.Runtime.HookProcessorEx.enabled = true;
 				break;
 
-			default:
+			case "disable":
+				// FIXME : Currently all static hooks go away which means
+				// no moar console commands can be issued :rocket:
+				Community.Runtime.HookProcessorEx.enabled = false;
 				break;
+
+			case "reload":
+				Community.Runtime.HookProcessorEx.Reload();
+				break;
+
+			case "update":
+				try
+				{
+					Carbon.Hooks.Updater.DoUpdate((bool result) =>
+					{
+						if (!result)
+						{
+							Logger.Error($"Unknown error while updating hooks");
+							return;
+						}
+						HookCaller.CallStaticHook("OnServerSave");
+						Community.Runtime.HookProcessorEx.Reload();
+					});
+				}
+				catch (System.Exception e)
+				{
+					Logger.Error($"Error while updating hooks", e);
+				}
+				break;
+
+			case "loaded":
+				{
+					IEnumerable<HookEx> hooks;
+
+					switch (option2)
+					{
+						case "--static":
+							hooks = Community.Runtime.HookProcessorEx.LoadedStaticHooks.Where(x => !x.IsHidden);
+							break;
+
+						case "--dynamic":
+							hooks = Community.Runtime.HookProcessorEx.LoadedDynamicHooks.Where(x => !x.IsHidden);
+							break;
+
+						case "--failed":
+							hooks = Community.Runtime.HookProcessorEx.LoadedStaticHooks
+								.Where(x => !x.IsHidden && x.Status == HookState.Failure);
+							hooks = hooks.Concat(Community.Runtime.HookProcessorEx.LoadedDynamicHooks
+								.Where(x => !x.IsHidden && x.Status == HookState.Failure));
+							break;
+
+						case "--warning":
+							hooks = Community.Runtime.HookProcessorEx.LoadedStaticHooks
+								.Where(x => !x.IsHidden && x.Status == HookState.Warning);
+							hooks = hooks.Concat(Community.Runtime.HookProcessorEx.LoadedDynamicHooks
+								.Where(x => !x.IsHidden && x.Status == HookState.Warning));
+							break;
+
+						case "--success":
+							hooks = Community.Runtime.HookProcessorEx.LoadedStaticHooks
+								.Where(x => !x.IsHidden && x.Status == HookState.Success);
+							hooks = hooks.Concat(Community.Runtime.HookProcessorEx.LoadedDynamicHooks
+								.Where(x => !x.IsHidden && x.Status == HookState.Success));
+							break;
+
+						default:
+							hooks = Community.Runtime.HookProcessorEx.LoadedStaticHooks.Where(x => !x.IsHidden);
+							hooks = hooks.Concat(Community.Runtime.HookProcessorEx.LoadedDynamicHooks.Where(x => !x.IsHidden));
+							break;
+					}
+
+					foreach (var mod in hooks.OrderBy(x => x.HookName))
+					{
+						if (mod.Status == HookState.Failure) failure++;
+						if (mod.Status == HookState.Success) success++;
+						if (mod.Status == HookState.Warning) warning++;
+
+						body.AddRow($"{count++:n0}", mod.HookName, mod.Identifier.Substring(0, 6), mod.IsStaticHook ? "Static" : "Dynamic", mod.Status, $"{HookCaller.GetHookTime(mod.HookName)}ms",
+							$"{HookCaller.GetHookTotalTime(mod.HookName)}ms", $"{Community.Runtime.HookProcessorEx.GetHookSubscriberCount(mod.HookName)}");
+					}
+
+					Reply(body.ToStringMinimal(), arg);
+					Reply($"total:{count} success:{success} warning:{warning} failed:{failure}", arg);
+					break;
+				}
+
+			default: // list installed
+				{
+					IEnumerable<HookEx> hooks;
+
+					switch (option1)
+					{
+						case "--static":
+							hooks = Community.Runtime.HookProcessorEx.InstalledStaticHooks.Where(x => !x.IsHidden);
+							break;
+
+						case "--dynamic":
+							hooks = Community.Runtime.HookProcessorEx.InstalledDynamicHooks.Where(x => !x.IsHidden);
+							break;
+
+						case "--warning":
+							hooks = Community.Runtime.HookProcessorEx.InstalledStaticHooks
+								.Where(x => !x.IsHidden && x.Status == HookState.Warning);
+							hooks = hooks.Concat(Community.Runtime.HookProcessorEx.InstalledDynamicHooks
+								.Where(x => !x.IsHidden && x.Status == HookState.Warning));
+							break;
+
+						case "--success":
+							hooks = Community.Runtime.HookProcessorEx.InstalledStaticHooks
+								.Where(x => !x.IsHidden && x.Status == HookState.Success);
+							hooks = hooks.Concat(Community.Runtime.HookProcessorEx.InstalledDynamicHooks
+								.Where(x => !x.IsHidden && x.Status == HookState.Success));
+							break;
+
+						default:
+							hooks = Community.Runtime.HookProcessorEx.InstalledStaticHooks.Where(x => !x.IsHidden);
+							hooks = hooks.Concat(Community.Runtime.HookProcessorEx.InstalledDynamicHooks.Where(x => !x.IsHidden));
+							break;
+					}
+
+					foreach (var mod in hooks.OrderBy(x => x.HookName))
+					{
+						if (mod.Status == HookState.Failure) failure++;
+						if (mod.Status == HookState.Success) success++;
+						if (mod.Status == HookState.Warning) warning++;
+
+						body.AddRow($"{count++:n0}", mod.HookName, mod.Identifier.Substring(0, 6), mod.IsStaticHook ? "Static" : "Dynamic", mod.Status, $"{HookCaller.GetHookTime(mod.HookName)}ms",
+							$"{HookCaller.GetHookTotalTime(mod.HookName)}ms", $"{Community.Runtime.HookProcessorEx.GetHookSubscriberCount(mod.HookName)}");
+					}
+
+					Reply(body.ToStringMinimal(), arg);
+					Reply($"total:{count} success:{success} warning:{warning} failed:{failure}", arg);
+					break;
+				}
 		}
-
-		foreach (var mod in Community.Runtime.HookProcessor.Patches)
-		{
-			if (!Community.Runtime.HookProcessor.Patches.TryGetValue(mod.Key, out var instance))
-			{
-				continue;
-			}
-
-			if (!onlyFailed || (onlyFailed && !instance.success))
-				body.AddRow($"{count:n0}", mod.Key, instance.success, $"{HookCaller.GetHookTime(mod.Key)}ms", $"{HookCaller.GetHookTotalTime(mod.Key)}ms", $"{instance.Hooks}");
-
-			if (instance.success) success++;
-			count++;
-		}
-
-		Reply(body.ToStringMinimal(), arg);
-		Reply($"total:{count} success:{success} failed:{count - success}", arg);
 	}
 
 	[ConsoleCommand("update", "Downloads, updates, saves the server and patches Carbon at runtime. (Eg. c.update win develop, c.update unix prod)")]
@@ -235,51 +366,16 @@ public class CorePlugin : RustPlugin
 	{
 		if (!arg.IsPlayerCalledAndAdmin()) return;
 
-		var os =
-#if WIN
-			Community.OS.Win;
-#elif UNIX
-				Community.OS.Linux;
-#endif
-		var type = GitHubRelases.ReleaseTypes.Develop;
-
-		if (arg.HasArgs(2))
+		Carbon.Core.Updater.DoUpdate((bool result) =>
 		{
-			switch (arg.Args[0])
+			if (!result)
 			{
-				case "win":
-					os = Community.OS.Win;
-					break;
-
-				case "linux":
-				case "unix":
-					os = Community.OS.Linux;
-					break;
+				Logger.Error($"Unknown error while updating Carbon");
+				return;
 			}
-
-			switch (arg.Args[1])
-			{
-				case "develop":
-				case "dev":
-				case "d":
-					type = GitHubRelases.ReleaseTypes.Develop;
-					break;
-
-				case "staging":
-				case "stage":
-				case "s":
-					type = GitHubRelases.ReleaseTypes.Staging;
-					break;
-
-				case "production":
-				case "prod":
-				case "p":
-					type = GitHubRelases.ReleaseTypes.Production;
-					break;
-			}
-		}
-
-		GitHubRelases.Update(os, type);
+			HookCaller.CallStaticHook("OnServerSave");
+			Supervisor.ASM.UnloadModule("Carbon.dll", true);
+		});
 	}
 
 	#region Config
@@ -600,14 +696,14 @@ public class CorePlugin : RustPlugin
 					return;
 				}
 
-				var module = BaseModule.GetModule<DRMModule>();
+				/*var module = BaseModule.GetModule<DRMModule>();
 				foreach (var drm in module.Config.DRMs)
 				{
 					foreach (var entry in drm.Entries)
 					{
 						if (entry.Id == name) drm.RequestEntry(entry);
 					}
-				}
+				}*/
 
 				break;
 		}

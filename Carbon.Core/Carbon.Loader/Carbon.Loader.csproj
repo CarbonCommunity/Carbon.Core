@@ -9,19 +9,14 @@
 
 	<ItemGroup>
 		<!-- Assembly editor -->
-		<PackageReference Include="Mono.Cecil" Version="0.11.4" />
-
-		<!-- Extra packages -->
-		<PackageReference Include="Costura.Fody" Version="5.7.0" PrivateAssets="all" />
+		<PackageReference Include="Mono.Cecil" Version="0.11.4" Aliases="MonoCecilStandalone" />
 
 		<!-- HarmonyLib using a custom name -->
 		<Reference Include="$(SolutionDir)..\Tools\HarmonyLib\Harmony\bin\Release\net48\1Harmony.dll" Private="true" />
 	</ItemGroup>
 
 	<Target Name="CarbonRelease" AfterTargets="CarbonPrepareRelease">
-		<!-- Changed due to FP_73186 changeset -->
-		<!-- <Copy SourceFiles="$(OutputPath)$(Product).pdb" DestinationFolder="$(c_harmony)" Condition="$(Configuration.Contains('Debug'))" /> -->
-		<Copy SourceFiles="$(OutputPath)$(Product).dll" DestinationFolder="$(c_harmony)" />
+		<Copy SourceFiles="$(OutputPath)$(Product).dll" DestinationFolder="$(c_managed)" />
 		<Copy SourceFiles="@(FilesToCopy)" DestinationFolder="$(c_lib)\%(RecursiveDir)" />
 	</Target>
 </Project>

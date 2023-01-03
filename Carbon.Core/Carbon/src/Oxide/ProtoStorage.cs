@@ -1,97 +1,98 @@
-﻿///
-/// Copyright (c) 2022 Carbon Community 
-/// All rights reserved
-/// 
-
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using ProtoBuf;
 
-namespace Oxide.Core
+/*
+ *
+ * Copyright (c) 2022-2023 Carbon Community 
+ * All rights reserved.
+ *
+ */
+
+namespace Oxide.Core;
+
+public class ProtoStorage
 {
-	public class ProtoStorage
+	public static IEnumerable<string> GetFiles(string subDirectory)
 	{
-		public static IEnumerable<string> GetFiles(string subDirectory)
+		var fileDataPath = GetFileDataPath(subDirectory.Replace("..", ""));
+
+		if (!Directory.Exists(fileDataPath))
 		{
-			var fileDataPath = GetFileDataPath(subDirectory.Replace("..", ""));
-
-			if (!Directory.Exists(fileDataPath))
-			{
-				yield break;
-			}
-
-			foreach (string value in Directory.GetFiles(fileDataPath, "*.data"))
-			{
-				yield return Utility.GetFileNameWithoutExtension(value);
-			}
-
 			yield break;
 		}
 
-		public static T Load<T>(params string[] subPaths)
+		foreach (string value in Directory.GetFiles(fileDataPath, "*.data"))
 		{
-			var fileName = GetFileName(subPaths);
-			var fileDataPath = GetFileDataPath(fileName);
+			yield return Utility.GetFileNameWithoutExtension(value);
+		}
 
-			try
+		yield break;
+	}
+
+	public static T Load<T>(params string[] subPaths)
+	{
+		var fileName = GetFileName(subPaths);
+		var fileDataPath = GetFileDataPath(fileName);
+
+		try
+		{
+			if (File.Exists(fileDataPath))
 			{
-				if (File.Exists(fileDataPath))
+				T result;
+				using (FileStream fileStream = File.OpenRead(fileDataPath))
 				{
-					T result;
-					using (FileStream fileStream = File.OpenRead(fileDataPath))
-					{
-						result = Serializer.Deserialize<T>(fileStream);
-					}
-					return result;
+					result = Serializer.Deserialize<T>(fileStream);
 				}
+				return result;
 			}
-			catch (Exception ex)
+		}
+		catch (Exception ex)
+		{
+			Carbon.Logger.Error("Failed to load protobuf data from " + fileName, ex);
+		}
+
+		return default(T);
+	}
+
+	public static void Save<T>(T data, params string[] subPaths)
+	{
+		var fileName = GetFileName(subPaths);
+		var fileDataPath = GetFileDataPath(fileName);
+		var directoryName = Path.GetDirectoryName(fileDataPath);
+
+		try
+		{
+			if (directoryName != null && !Directory.Exists(directoryName))
 			{
-				Carbon.Logger.Error("Failed to load protobuf data from " + fileName, ex);
+				Directory.CreateDirectory(directoryName);
 			}
 
-			return default(T);
-		}
-
-		public static void Save<T>(T data, params string[] subPaths)
-		{
-			var fileName = GetFileName(subPaths);
-			var fileDataPath = GetFileDataPath(fileName);
-			var directoryName = Path.GetDirectoryName(fileDataPath);
-
-			try
+			var mode = File.Exists(fileDataPath) ? FileMode.Truncate : FileMode.Create;
+			using (FileStream fileStream = File.Open(fileDataPath, mode))
 			{
-				if (directoryName != null && !Directory.Exists(directoryName))
-				{
-					Directory.CreateDirectory(directoryName);
-				}
-
-				var mode = File.Exists(fileDataPath) ? FileMode.Truncate : FileMode.Create;
-				using (FileStream fileStream = File.Open(fileDataPath, mode))
-				{
-					Serializer.Serialize<T>(fileStream, data);
-				}
-			}
-			catch (Exception ex)
-			{
-				Carbon.Logger.Error("Failed to save protobuf data to " + fileName, ex);
+				Serializer.Serialize<T>(fileStream, data);
 			}
 		}
-
-		public static bool Exists(params string[] subPaths)
+		catch (Exception ex)
 		{
-			return File.Exists(GetFileDataPath(GetFileName(subPaths)));
+			Carbon.Logger.Error("Failed to save protobuf data to " + fileName, ex);
 		}
+	}
 
-		public static string GetFileName(params string[] subPaths)
-		{
-			return string.Join(Path.DirectorySeparatorChar.ToString(), subPaths).Replace("..", "") + ".data";
-		}
+	public static bool Exists(params string[] subPaths)
+	{
+		return File.Exists(GetFileDataPath(GetFileName(subPaths)));
+	}
 
-		public static string GetFileDataPath(string name)
-		{
-			return Path.Combine(Interface.Oxide.DataDirectory, name);
-		}
+	public static string GetFileName(params string[] subPaths)
+	{
+		return string.Join(Path.DirectorySeparatorChar.ToString(), subPaths).Replace("..", "") + ".data";
+	}
+
+	public static string GetFileDataPath(string name)
+	{
+		return Path.Combine(Interface.Oxide.DataDirectory, name);
 	}
 }

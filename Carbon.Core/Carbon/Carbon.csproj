@@ -6,17 +6,17 @@
 	</PropertyGroup>
 
 	<Import Project="..\.msbuild\Common.props" />
-	<Import Project="..\.msbuild\AssemblyName.props" />
+	<!-- <Import Project="..\.msbuild\AssemblyName.props" /> -->
 
 	<ItemGroup>
-		<!-- Carbon platform -->
-		<ProjectReference Include="..\Carbon.Loader\Carbon.Loader.csproj" Private="false" />
-
 		<!-- HarmonyLib using a custom name -->
 		<Reference Include="$(SolutionDir)..\Tools\HarmonyLib\Harmony\bin\Release\net48\1Harmony.dll" Private="false" />
 
 		<!-- Required by Carbon's Logger -->
 		<PackageReference Include="Ben.Demystifier" Version="0.4.1" />
+
+		<!-- Compression -->
+		<PackageReference Include="SharpCompress" Version="0.32.2" PrivateAssets="all" />
 
 		<!-- Required by Carbon's Compiler -->
 		<PackageReference Include="protobuf-net.Core" Version="3.1.17" />
@@ -30,8 +30,6 @@
 	</ItemGroup>
 
 	<Target Name="CarbonRelease" AfterTargets="CarbonPrepareRelease">
-		<!-- Changed due to FP_73186 changeset -->
-		<!-- <Copy SourceFiles="$(OutputPath)$(Product).pdb" DestinationFolder="$(c_managed)" Condition="$(Configuration.Contains('Debug'))" /> -->
 		<Copy SourceFiles="$(OutputPath)$(Product).dll" DestinationFolder="$(c_managed)" />
 	</Target>
 

@@ -1,26 +1,29 @@
-﻿///
-/// Copyright (c) 2022 Carbon Community 
-/// All rights reserved
-/// 
-
-#if !(WIN || UNIX)
-#error Target architecture not defined
-#endif
-
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using Carbon.Base.Interfaces;
 using Carbon.Core;
 using Carbon.Extensions;
+using Carbon.Hooks;
 using Carbon.Processors;
 using Newtonsoft.Json;
 using Oxide.Core;
 using Oxide.Plugins;
 using UnityEngine;
 
+/*
+ *
+ * Copyright (c) 2022-2023 Carbon Community 
+ * All rights reserved.
+ *
+ */
+
 namespace Carbon;
+
+#if !(WIN || UNIX)
+#error Target architecture not defined
+#endif
 
 public class Community
 {
@@ -32,27 +35,11 @@ public class Community
 
 	public static bool IsConfigReady => Runtime != null && Runtime.Config != null;
 
-	public const OS OperatingSystem =
-#if WIN
-		 OS.Win;
-#elif UNIX
-			 OS.Linux;
-#endif
-
-	public enum OS
-	{
-		Win,
-		Linux
-	}
-
-	public HookProcessor HookProcessor { get; set; }
 	public Config Config { get; set; }
 	public RustPlugin CorePlugin { get; set; }
 	public Loader.CarbonMod Plugins { get; set; }
 	public Entities Entities { get; set; }
 	public bool IsInitialized { get; set; }
-
-	internal static List<string> _addons = new List<string> { "carbon." };
 
 	#region Config
 
@@ -116,8 +103,12 @@ public class Community
 	public HarmonyProcessor HarmonyProcessor { get; set; }
 	public ModuleProcessor ModuleProcessor { get; set; }
 
+	internal HookManager HookProcessorEx { get; set; }
+
 	internal void _installProcessors()
 	{
+		Carbon.Logger.Log("Installed processors");
+
 		if (ScriptProcessor == null ||
 			WebScriptProcessor == null ||
 			HarmonyProcessor == null ||
@@ -131,11 +122,11 @@ public class Community
 			WebScriptProcessor = gameObject.AddComponent<WebScriptProcessor>();
 			HarmonyProcessor = gameObject.AddComponent<HarmonyProcessor>();
 			CarbonProcessor = gameObject.AddComponent<CarbonProcessor>();
-			HookProcessor = new HookProcessor();
+			HookProcessorEx = gameObject.AddComponent<HookManager>();
 			ModuleProcessor = new ModuleProcessor();
 			Entities = new Entities();
+
 		}
-		Carbon.Logger.Log("Installed processors");
 
 		_registerProcessors();
 	}
@@ -219,9 +210,9 @@ public class Community
 
 		var version =
 #if DEBUG
-		InformationalVersion;
+			InformationalVersion;
 #else
-			Version;
+            Version;
 #endif
 
 		ServerConsole.Instance.input.statusText[3] = $" Carbon v{version}, {Loader._loadedMods.Count:n0} mods, {Loader._loadedMods.Sum(x => x.Plugins.Count):n0} plgs";
@@ -257,7 +248,6 @@ public class Community
 		_installDefaultCommands();
 
 		HookValidator.Refresh();
-		Carbon.Logger.Log("Fetched oxide hooks");
 
 		ReloadPlugins();
 
@@ -268,8 +258,6 @@ public class Community
 		IsInitialized = true;
 
 		Entities.Init();
-
-		HookProcessor.InstallAlwaysPatchedHooks();
 	}
 	public void Uninitalize()
 	{
@@ -277,6 +265,8 @@ public class Community
 		{
 			_uninstallProcessors();
 			_clearCommands(all: true);
+
+			HookProcessorEx.enabled = false;
 
 			ClearPlugins();
 			Loader._loadedMods.Clear();
@@ -294,11 +284,6 @@ public class Community
 #endif
 
 			Entities.Dispose();
-
-			foreach (var hook in HookProcessor.Patches)
-			{
-				HookProcessor.UninstallHooks(hook.Key, shutdown: true);
-			}
 
 			Carbon.Logger._dispose();
 		}

@@ -32,10 +32,16 @@ else
 	cp "${ROOT}/Tools/UnityDoorstop/windows/x64/doorstop.dll" "${ROOT}/Release/.tmp/${TARGET}/winhttp.dll"
 fi
 
-echo "** Create the standalone files"
-cp "${ROOT}/Release/.tmp/${TARGET}/HarmonyMods/Carbon.Loader.dll" "${ROOT}/Release"
-cp "${ROOT}/Release/.tmp/${TARGET}/carbon/managed/Carbon.dll" "${ROOT}/Release"
+echo "** Create the standalone files" 
+cp "${ROOT}/Release/.tmp/${TARGET}/HarmonyMods/Carbon.Stub.dll"        "${ROOT}/Release"
+
+cp "${ROOT}/Release/.tmp/${TARGET}/carbon/managed/Carbon.dll"          "${ROOT}/Release"
 cp "${ROOT}/Release/.tmp/${TARGET}/carbon/managed/Carbon.Doorstop.dll" "${ROOT}/Release"
+cp "${ROOT}/Release/.tmp/${TARGET}/carbon/managed/Carbon.Loader.dll"   "${ROOT}/Release"
+
+cp "${ROOT}/Release/.tmp/${TARGET}/carbon/managed/hooks/Carbon.Hooks.Base.dll"     "${ROOT}/Release"
+cp "${ROOT}/Release/.tmp/${TARGET}/carbon/managed/hooks/Carbon.Hooks.Extended.dll" "${ROOT}/Release"
+
 
 echo "** Create the compressed archive"
 tar -zcvf "${ROOT}/Release/Carbon.${TARGET}.tar.gz" -C "${ROOT}/Release/.tmp/${TARGET}" $(ls -A ${ROOT}/Release/.tmp/${TARGET})

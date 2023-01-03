@@ -1,14 +1,15 @@
-﻿///
-/// Copyright (c) 2022 Carbon Community 
-/// All rights reserved
-/// 
+﻿using System;
 
-using System;
+/*
+ *
+ * Copyright (c) 2022-2023 Carbon Community 
+ * All rights reserved.
+ *
+ */
 
-namespace Oxide.Core.Libraries
+namespace Oxide.Core.Libraries;
+
+public abstract class Library : IDisposable
 {
-	public abstract class Library : IDisposable
-	{
-		public virtual void Dispose() { }
-	}
+	public virtual void Dispose() { }
 }

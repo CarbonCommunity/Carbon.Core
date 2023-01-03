@@ -1,14 +1,14 @@
-﻿///
-/// Copyright (c) 2022 Carbon Community 
-/// All rights reserved
-/// 
+﻿/*
+ *
+ * Copyright (c) 2022-2023 Carbon Community 
+ * All rights reserved.
+ *
+ */
 
+namespace Oxide.Core.Libraries.Covalence;
 
-namespace Oxide.Core.Libraries.Covalence
+public enum CommandType
 {
-	public enum CommandType
-	{
-		Chat,
-		Console
-	}
+	Chat,
+	Console
 }

@@ -1,0 +1,14 @@
+﻿<Project Sdk="Microsoft.NET.Sdk" DefaultTargets="Build">
+	<PropertyGroup>
+		<Product>Carbon.Stub</Product>
+		<OutputType>Library</OutputType>
+		<ProjectGuid>{AE1F53A2-861D-4D7E-B684-624A05394F90}</ProjectGuid>
+	</PropertyGroup>
+
+	<Import Project="..\.msbuild\Common.props" />
+
+	<Target Name="CarbonRelease" AfterTargets="CarbonPrepareRelease">
+		<Copy SourceFiles="$(OutputPath)$(Product).dll" DestinationFolder="$(c_harmony)" />
+		<Copy SourceFiles="@(FilesToCopy)" DestinationFolder="$(c_lib)\%(RecursiveDir)" />
+	</Target>
+</Project>

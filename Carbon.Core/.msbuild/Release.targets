@@ -7,11 +7,12 @@
 			<c_harmony>$(CarbonBaseDir)\HarmonyMods</c_harmony>
 			<c_lib>$(CarbonBaseDir)\carbon\managed\lib</c_lib>
 			<c_managed>$(CarbonBaseDir)\carbon\managed</c_managed>
+			<c_hooks>$(CarbonBaseDir)\carbon\managed\hooks</c_hooks>
 			<c_tools>$(CarbonBaseDir)\carbon\tools</c_tools>
 		</PropertyGroup>
 
 		<Message Text="[$(AssemblyName)] &gt;&gt; Create the release folders at '$(CarbonBaseDir)'" Importance="high" />
-		<MakeDir Directories="$(CarbonBaseDir);$(c_harmony);$(c_lib);$(c_managed);$(c_tools)" />
+		<MakeDir Directories="$(CarbonBaseDir);$(c_harmony);$(c_lib);$(c_managed);$(c_hooks);$(c_tools)" />
 
 		<ItemGroup>
 			<FilesToCopy Include="$(OutputPath)*.dll" Exclude="$(OutputPath)$(Product).dll" />

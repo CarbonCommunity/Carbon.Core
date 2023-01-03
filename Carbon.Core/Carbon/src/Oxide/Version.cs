@@ -1,164 +1,165 @@
-﻿///
-/// Copyright (c) 2022 Carbon Community 
-/// All rights reserved
-/// 
+﻿/*
+ *
+ * Copyright (c) 2022-2023 Carbon Community 
+ * All rights reserved.
+ *
+ */
 
-namespace Oxide.Core
+namespace Oxide.Core;
+
+public struct VersionNumber
 {
-	public struct VersionNumber
+	public int Major;
+
+	public int Minor;
+
+	public int Patch;
+
+	public VersionNumber(int major, int minor, int patch)
 	{
-		public int Major;
+		Major = major;
+		Minor = minor;
+		Patch = patch;
+	}
 
-		public int Minor;
+	public override string ToString()
+	{
+		return $"{Major}.{Minor}.{Patch}";
+	}
 
-		public int Patch;
-
-		public VersionNumber(int major, int minor, int patch)
+	public static bool operator ==(VersionNumber a, VersionNumber b)
+	{
+		if (a.Major == b.Major && a.Minor == b.Minor)
 		{
-			Major = major;
-			Minor = minor;
-			Patch = patch;
+			return a.Patch == b.Patch;
 		}
 
-		public override string ToString()
+		return false;
+	}
+
+	public static bool operator !=(VersionNumber a, VersionNumber b)
+	{
+		if (a.Major == b.Major && a.Minor == b.Minor)
 		{
-			return $"{Major}.{Minor}.{Patch}";
+			return a.Patch != b.Patch;
 		}
 
-		public static bool operator ==(VersionNumber a, VersionNumber b)
-		{
-			if (a.Major == b.Major && a.Minor == b.Minor)
-			{
-				return a.Patch == b.Patch;
-			}
+		return true;
+	}
 
+	public static bool operator >(VersionNumber a, VersionNumber b)
+	{
+		if (a.Major < b.Major)
+		{
 			return false;
 		}
 
-		public static bool operator !=(VersionNumber a, VersionNumber b)
+		if (a.Major > b.Major)
 		{
-			if (a.Major == b.Major && a.Minor == b.Minor)
-			{
-				return a.Patch != b.Patch;
-			}
-
 			return true;
 		}
 
-		public static bool operator >(VersionNumber a, VersionNumber b)
+		if (a.Minor < b.Minor)
 		{
-			if (a.Major < b.Major)
-			{
-				return false;
-			}
-
-			if (a.Major > b.Major)
-			{
-				return true;
-			}
-
-			if (a.Minor < b.Minor)
-			{
-				return false;
-			}
-
-			if (a.Minor > b.Minor)
-			{
-				return true;
-			}
-
-			return a.Patch > b.Patch;
+			return false;
 		}
 
-		public static bool operator >=(VersionNumber a, VersionNumber b)
+		if (a.Minor > b.Minor)
 		{
-			if (a.Major < b.Major)
-			{
-				return false;
-			}
-
-			if (a.Major > b.Major)
-			{
-				return true;
-			}
-
-			if (a.Minor < b.Minor)
-			{
-				return false;
-			}
-
-			if (a.Minor > b.Minor)
-			{
-				return true;
-			}
-
-			return a.Patch >= b.Patch;
+			return true;
 		}
 
-		public static bool operator <(VersionNumber a, VersionNumber b)
+		return a.Patch > b.Patch;
+	}
+
+	public static bool operator >=(VersionNumber a, VersionNumber b)
+	{
+		if (a.Major < b.Major)
 		{
-			if (a.Major > b.Major)
-			{
-				return false;
-			}
-
-			if (a.Major < b.Major)
-			{
-				return true;
-			}
-
-			if (a.Minor > b.Minor)
-			{
-				return false;
-			}
-
-			if (a.Minor < b.Minor)
-			{
-				return true;
-			}
-
-			return a.Patch < b.Patch;
+			return false;
 		}
 
-		public static bool operator <=(VersionNumber a, VersionNumber b)
+		if (a.Major > b.Major)
 		{
-			if (a.Major > b.Major)
-			{
-				return false;
-			}
-
-			if (a.Major < b.Major)
-			{
-				return true;
-			}
-
-			if (a.Minor > b.Minor)
-			{
-				return false;
-			}
-
-			if (a.Minor < b.Minor)
-			{
-				return true;
-			}
-
-			return a.Patch <= b.Patch;
+			return true;
 		}
 
-		public override bool Equals(object obj)
+		if (a.Minor < b.Minor)
 		{
-			if (!(obj is VersionNumber))
-			{
-				return false;
-			}
-
-			VersionNumber versionNumber = (VersionNumber)obj;
-			return this == versionNumber;
+			return false;
 		}
 
-		public override int GetHashCode()
+		if (a.Minor > b.Minor)
 		{
-			return ((17 * 23 + Major.GetHashCode()) * 23 + Minor.GetHashCode()) * 23 + Patch.GetHashCode();
+			return true;
 		}
+
+		return a.Patch >= b.Patch;
+	}
+
+	public static bool operator <(VersionNumber a, VersionNumber b)
+	{
+		if (a.Major > b.Major)
+		{
+			return false;
+		}
+
+		if (a.Major < b.Major)
+		{
+			return true;
+		}
+
+		if (a.Minor > b.Minor)
+		{
+			return false;
+		}
+
+		if (a.Minor < b.Minor)
+		{
+			return true;
+		}
+
+		return a.Patch < b.Patch;
+	}
+
+	public static bool operator <=(VersionNumber a, VersionNumber b)
+	{
+		if (a.Major > b.Major)
+		{
+			return false;
+		}
+
+		if (a.Major < b.Major)
+		{
+			return true;
+		}
+
+		if (a.Minor > b.Minor)
+		{
+			return false;
+		}
+
+		if (a.Minor < b.Minor)
+		{
+			return true;
+		}
+
+		return a.Patch <= b.Patch;
+	}
+
+	public override bool Equals(object obj)
+	{
+		if (!(obj is VersionNumber))
+		{
+			return false;
+		}
+
+		VersionNumber versionNumber = (VersionNumber)obj;
+		return this == versionNumber;
+	}
+
+	public override int GetHashCode()
+	{
+		return ((17 * 23 + Major.GetHashCode()) * 23 + Minor.GetHashCode()) * 23 + Patch.GetHashCode();
 	}
 }

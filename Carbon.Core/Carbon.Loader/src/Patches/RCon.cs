@@ -1,9 +1,13 @@
-///
-/// Copyright (c) 2022 Carbon Community 
-/// All rights reserved
-/// 
+﻿using Carbon.LoaderEx.Harmony;
 using Facepunch;
 using HarmonyLib;
+
+/*
+ *
+ * Copyright (c) 2022-2023 Carbon Community 
+ * All rights reserved.
+ *
+ */
 
 namespace Carbon.LoaderEx.Patches;
 
@@ -15,9 +19,16 @@ internal static class __RCon
 		[HarmonyPriority(int.MaxValue)]
 		private static bool Prefix(RCon.Command cmd)
 		{
-			if (cmd.Name != "c.boot" || Components.Supervisor.Core.IsStarted) return true;
-			Components.Supervisor.Core.Start();
-			return false;
+			switch (cmd.Name)
+			{
+				case "c.boot":
+					if (!HarmonyLoaderEx.GetInstance().IsLoaded("Carbon.dll"))
+						HarmonyLoaderEx.GetInstance().Load("Carbon.dll");
+					return false;
+
+				default:
+					return true;
+			}
 		}
 	}
 }

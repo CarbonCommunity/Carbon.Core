@@ -39,9 +39,15 @@ echo "%TARGET%" | findstr /C:"Unix" >NUL && (
 )
 
 echo ** Create the standalone files
+copy /y "%ROOT%\Release\.tmp\%TARGET%\HarmonyMods\Carbon.Stub.dll"        "%ROOT%\Release"
+
 copy /y "%ROOT%\Release\.tmp\%TARGET%\carbon\managed\Carbon.dll"          "%ROOT%\Release"
-copy /y "%ROOT%\Release\.tmp\%TARGET%\HarmonyMods\Carbon.Loader.dll"      "%ROOT%\Release"
 copy /y "%ROOT%\Release\.tmp\%TARGET%\carbon\managed\Carbon.Doorstop.dll" "%ROOT%\Release"
+copy /y "%ROOT%\Release\.tmp\%TARGET%\carbon\managed\Carbon.Loader.dll"   "%ROOT%\Release"
+
+copy /y "%ROOT%\Release\.tmp\%TARGET%\carbon\managed\hooks\Carbon.Hooks.Base.dll"     "%ROOT%\Release"
+copy /y "%ROOT%\Release\.tmp\%TARGET%\carbon\managed\hooks\Carbon.Hooks.Extended.dll" "%ROOT%\Release"
+
 
 echo ** Create the compressed archive
 powershell -Command "Compress-Archive -Update -Path '%ROOT%\Release\.tmp\%TARGET%\*' -DestinationPath '%ROOT%\Release\Carbon.%TARGET%.zip'"

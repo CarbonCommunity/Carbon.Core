@@ -18,8 +18,6 @@
 	</ItemGroup>
 
 	<Target Name="CarbonRelease" AfterTargets="CarbonPrepareRelease">
-		<!-- Changed due to FP_73186 changeset -->
-		<!-- <Copy SourceFiles="$(OutputPath)$(Product).pdb" DestinationFolder="$(c_managed)" Condition="$(Configuration.Contains('Debug'))" /> -->
 		<Copy SourceFiles="$(OutputPath)$(Product).dll" DestinationFolder="$(c_managed)" />
 	</Target>
 </Project>
